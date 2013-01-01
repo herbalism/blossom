@@ -1,7 +1,14 @@
 curl({
     paths: {
-	jquery: 'ext/jquery-1.7.1.min',
-	lodash: 'modules/lodash/lodash'
+	'curl/plugin': 'modules/curl/src/curl/plugin',
+	less: 'modules/less.js/dist/less-1.3.1.js',
+	'curl/plugin/blossom': 'blossom'
+    },
+    packages: {
+	when: {
+	    path: 'modules/when',
+	    main: 'when'
+	}
     }
 });
 
