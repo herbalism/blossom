@@ -10,7 +10,7 @@ define(['less', 'when'], function(less, when) {
     };
 
     function styleTitle(name) {
-	"less:" +extractId(name);
+	return "less:" +extractId(name);
     };
 
     function createCSS(styles, name) {
@@ -19,14 +19,18 @@ define(['less', 'when'], function(less, when) {
 	var cleanName = name.replace(/\?.*$/, '');
 	var id = styleTitle(cleanName);
 
+	console.log("the id: ", id);
+
 	// If the stylesheet doesn't exist, create a new node
 	if ((css = document.getElementById(id)) === null) {
+	    console.log("and insert 1: ", id);
             css = document.createElement('style');
             css.type = 'text/css';
         //    if( sheet.media ){ css.media = sheet.media; }
             css.id = id;
 	    css.title= id;
             var nextEl = null;
+	    console.log("and insert: ", id);
             document.getElementsByTagName('head')[0].insertBefore(css, nextEl);
 	}
 
@@ -49,30 +53,47 @@ define(['less', 'when'], function(less, when) {
 	}
     }
 
-    less.Parser.importer = function() {
-	console.log("import: ", arguments);
+    var loadStyle = function(path, req, callBack) {
+	    req([path], function(sheet) {
+		new(less.Parser)({
+		    optimization: less.optimization,
+		    paths: [path.replace(/[\w\.-]+$/, '')],
+		    mime: 'stylesheet/less',
+		    filename: name,
+		    require: req,
+		    'contents': {},    // Passing top importing parser content cache ref down.
+		    dumpLineNumbers: less.dumpLineNumbers
+		}).parse(sheet, callBack);
+	    });
+    };
+
+    less.Parser.importer = function (path, paths, callback, env) {
+        if (!/^([a-z-]+:)?\//.test(path) && paths.length > 0) {
+            path = paths[0] + path;
+        }
+	
+	console.log("Path: ", path, " Paths ", paths, "env ", env);
+	loadStyle(path, env.require, function (e) {
+            if (e && typeof(env.errback) === "function") {
+                env.errback.call(null, path, paths, callback, env);
+            } else {
+                callback.apply(null, arguments);
+            }
+        }, true);
     };
 
     return {
 	styleTitle: styleTitle,
 	load: function(name, req, loaded, config) {
-	    req(['text!'+name], function(sheet) {
-		new(less.Parser)({
-		    optimization: less.optimization,
-		    paths: ["text!"+name.replace(/[\w\.-]+$/, '')],
-		    mime: 'stylesheet/less',
-		    filename: name,
-		    'contents': {},    // Passing top importing parser content cache ref down.
-		    dumpLineNumbers: less.dumpLineNumbers
-		}).parse(sheet, function (e, root) {
-		    if (e) {
-			console.log("Error: ", e, name);
-		    }
-		    createCSS(root.toCSS(), name);
-		    loaded(sheet);
-		    console.log("sheet: ",sheet);
-		});
-	    });
+	    loadStyle('text!'+name, req, 
+		      function(e, root) {
+			  if (e) {
+			      console.log("Error: ", e, name);
+			  }
+			  
+			  createCSS(root.toCSS(), name);
+			  loaded(root)			  
+		      });
 	}
     }
 });
