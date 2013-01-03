@@ -13,15 +13,23 @@ define(['blossom',
 	       return defered.promise;
 	       
 	   };
+	   
+	   var rules = function(sheet) {
+	       var ruleIndex = 0;
+	       var result = {};
+	       for (ruleIndex = 0; ruleIndex < sheet.rules.length; ruleIndex ++) {
+		   var rule = sheet.rules[ruleIndex];
+		   result[rule.selectorText] = rule.style.cssText;
+	       }
+	       return result;
+	   }
 
 	   var styleList = function() {
-	       var styleSheets = [];
+	       var styleSheets = {};
 	       var sheetIndex = 0;
-	       console.log("length", window.document.styleSheets.length);
 	       for(sheetIndex = 0; sheetIndex < window.document.styleSheets.length; sheetIndex++) {
-		   styleSheets.push({
-		       title: window.document.styleSheets[sheetIndex].title 
-		   });
+		   sheet = window.document.styleSheets[sheetIndex];
+		   styleSheets[sheet.ownerNode.id] = rules(sheet);
 	       }
 	       return styleSheets;
 	   }
@@ -31,9 +39,9 @@ define(['blossom',
 		   var lessToLoad = 'examples/leaf.less'
 		   return when(resolve(lessToLoad)).then(
 		       function(value){
-			   console.log(styleList());
-			   assert.match([{title: blossom.styleTitle(lessToLoad)}],
-				       styleList())
+			   assert.match(styleList(),
+				       {'less:examples-leaf' : 
+					{'#content' : 'color: rgb(77, 146, 111);'}});
 		       }
 		   )
 	       },
@@ -41,9 +49,9 @@ define(['blossom',
 		   var lessToLoad = 'examples/one-import.less';
 		   return when(resolve(lessToLoad)).then(
 		       function(value){
-			   console.log(styleList());
-			   assert.match([{title: blossom.styleTitle(lessToLoad)}],
-				       styleList());
+			   assert.match(styleList(), 
+					{'less:examples-one-import': 
+					 {'h4':"color: rgb(187, 187, 187)"}});
 		       }
 		   )
 	       }

@@ -19,18 +19,13 @@ define(['less', 'when'], function(less, when) {
 	var cleanName = name.replace(/\?.*$/, '');
 	var id = styleTitle(cleanName);
 
-	console.log("the id: ", id);
-
 	// If the stylesheet doesn't exist, create a new node
 	if ((css = document.getElementById(id)) === null) {
-	    console.log("and insert 1: ", id);
             css = document.createElement('style');
             css.type = 'text/css';
         //    if( sheet.media ){ css.media = sheet.media; }
             css.id = id;
-	    css.title= id;
             var nextEl = null;
-	    console.log("and insert: ", id);
             document.getElementsByTagName('head')[0].insertBefore(css, nextEl);
 	}
 
@@ -72,7 +67,6 @@ define(['less', 'when'], function(less, when) {
             path = paths[0] + path;
         }
 	
-	console.log("Path: ", path, " Paths ", paths, "env ", env);
 	loadStyle(path, env.require, function (e) {
             if (e && typeof(env.errback) === "function") {
                 env.errback.call(null, path, paths, callback, env);
